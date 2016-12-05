@@ -50,13 +50,13 @@ class PassManager():
 				# it into an array for referencing
 				info = line[open_brkt + 1:close_brkt]
 				info = info.split(",")
-				# Add all the information including a user friendly output
-				output += ("\nUsername: " + info[0] + "\nPassword: " +
-					info[1])
+				# Add all the information to output
+				output += ("\nUsername: " + info[0] +
+				           "\nPassword: " + info[1])
 		
 		# If we can not find the website's information, tell the user
 		if(not found):
-			output.append("\nDoes not exist.")
+			output += ("\nDoes not exist.")
 
 		print(output)
 		file.close()
