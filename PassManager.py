@@ -70,7 +70,7 @@ class PassManager():
 	    
 	    # If we can not find the website's information, tell the user
 	    if(not found):
-		    output.append("\nDoes not exist.")
+		    raise InvalidLookupError("Not a saved webstie")
 	    
 	    # Give the appropriate output and close the file
 	    print(output)
@@ -81,20 +81,16 @@ class PassManager():
 	    delete it
 	    '''
 	    # Create a file variable, a seek variable, and read all the lines
-	    file = open(self.file_name, "r+")
-	    lines = file.readlines()
-	    file.seek(0)
-	    
-	    # Look for the website's data
-	    for line in lines:
-		# If the line is not the website to be removed, add it to the file
-		    open_brkt = line.find("[")	    
-		    if website != (line[:open_brkt]):
-			file.write(line)
+	    try:
+		    website_info = self._delete_helper(website)
+	    except InvalidLookupError as error:
+		    print(error.args)
 
-	    # Truncate and close the file
-	    file.truncate()
-	    file.close()
+	    if(not_needed == "Not Found"):
+		    print(website + "'s information doesn't exist")
+	    else:
+		    print(website + "'s data has been removed!")
+	    
     
     
     def changePass(self, website, newpassword):
@@ -102,30 +98,49 @@ class PassManager():
 	    password to a new password
 	    '''
 	    
-	    # Create a file variable
-	    file = open(self.file_name, "a")
-	    file.close()
-	    pass
+	    # Delete previous save, but retain the username
+	    try:
+		    website_info = self._delete_helper(website)
+	    except InvalidLookupError as error:
+		    print(error.args)
 
+	    username = website_info[website_info.find("[") + 1:
+	                            website_info.find(",")]
+	    # Resave the information with the newpassword
+	    self.save(website, username, newpassword)
+	    
     def changeUser(self, website, newusername):
 	    ''' This function will go through the text file and change the website's
 	    username to a new username
 	    '''
-	    pass
+	    # Delete previous save, but retain the password
+	    try:
+		    website_info = self._delete_helper(website)
+	    except InvalidLookupError as error:
+		    print(error.args)
+	    password = website_info[website_info.find(",") + 1:
+	                            website_info.find("]")]
+	    # Resave the information with the newusername
+	    self.save(website, newusername, password)
     
     def getAll(self):
 	    ''' This function will output all of the saved usernames and passwords
 	    beside their respective website names
 	    '''
-	    pass
+	    file = open(self.file_name, "r")
+	    for line in file:
+		    open_brkt = line.find("[")
+		    print(line[:open_brkt])
+
 	
-    def __delete_helper(self, website):
+    def _delete_helper(self, website):
 	    ''' Helper function that deletes and returns the website's info
 	    '''
 	    # Create a file variable, a seek variable, and read all the lines
 	    file = open(self.file_name, "r+")
-	    lines = file.readlines()
 	    website_info = ""
+	    found = False
+	    lines = file.readlines()
 	    file.seek(0)
 	    
 	    # Look for the website's data
@@ -133,10 +148,17 @@ class PassManager():
 		# If the line is not the website to be removed, add it to the file
 		    open_brkt = line.find("[")	    
 		    if website != (line[:open_brkt]):
-			file.write(line)
+			    file.write(line)
 		    else:
-			website_info = line
+			    website_info = line
+			    found = True
 	    # Truncate and close the file
 	    file.truncate()
 	    file.close()
-	    return line	
+	    if(not found):
+		    raise InvalidLookupError("Not a saved website")
+	    return line
+
+class InvalidLookupError(LookupError):
+    def __init__(self, arg):
+	    self.args = arg
